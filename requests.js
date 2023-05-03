@@ -4,7 +4,6 @@ const cors = require("cors")
 var Clipper = require('image-clipper');
 var sizeOf = require('image-size');
 var Canvas = require('canvas');
-const bodyParser = require("body-parser")
 Clipper.configure('canvas', Canvas);
 // The fileUpload npm package for handling
 // file upload functionality
@@ -15,7 +14,10 @@ const app = express();
 // Passing fileUpload as a middleware 
 app.use(fileUpload());
 app.use(cors())
-app.use(bodyParser())
+app.use(function (error, req, res, next) {
+  console.log("fsdfsdfds",req.path,req.method,req.ip)
+   next();
+});
 function download(base64, fileName) {
   console.log(base64)
   var link = document.createElement("a");
@@ -51,7 +53,6 @@ function download(base64, fileName) {
           .quality(100)
           .toFile(image1, function() {
             console.log(`Saved to /output/image_${count}.png`)
-            console.log(images)
          });
       })
       images.push({id:`${count}`,image:`image_${count}.png`})
@@ -98,16 +99,20 @@ app.post("/upload", function (req, res) {
 // To handle the download file request
 app.get("/download", function (req, res) {
   let image = req.query.image
-  console.log(images)
-  var bitmap = fs.readFileSync("./output/"+image);
-  res.send("data:image/png;base64,"+Buffer(bitmap).toString("base64"))
+  let resImages = []
+  let count = 0
+  // res.header('image',"data:image/png;base64,"+bitmap.toString("base64"))
   
-  // fs.readdir("./output/", (err, files) => {
-  //   files.forEach(file => {
-  //     var bitmap = fs.readFileSync("./output/"+file);
-  //     res.send("data:image/png;base64,"+Buffer(bitmap).toString("base64"))
-  //   })
-  // })
+  fs.readdir("./output/", (err, files) => {
+    files.forEach(file => {
+      var bitmap = fs.readFileSync("./output/"+file);
+      // resImages.push({id:`${count}`,url:"data:image/png;base64,"+bitmap.toString("base64")})
+      resImages.push({id:`${count}`,url:bitmap.toString("base64")})
+      count++
+    })
+    console.log(resImages)
+    res.send(resImages)
+  })
   // // The res.download() talking file path to be downloaded
   // console.log(__dirname + "/output/" + "image_1.png")
   // res.download(__dirname + "/output/" + "image_1.png", function (err) {
@@ -117,7 +122,9 @@ app.get("/download", function (req, res) {
   // });
 });
   
-  
+app.get("/", function (req, res) {
+ res.send("fsdfdsfsd")
+});
 // Makes app listen to port 3000
 app.listen(5050, () => console.log(`Start!`))
 
