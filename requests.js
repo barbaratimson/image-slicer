@@ -49,7 +49,6 @@ fs.readdir("./output/", (err,files) => {
     console.log(imageHeight,imageWidth)
     for(var x = 0; x < numColsToCut; ++x) {
         for(var y = 0; y < numRowsToCut; ++y) {
-        count1++
         let uploadedFile = `image_${count1}.png`
         let image1 = __dirname + "/output/" + uploadedFile;
         Clipper(image, function() {
@@ -60,6 +59,7 @@ fs.readdir("./output/", (err,files) => {
           .toFile(image1, function() {
             console.log(`Saved to /output/` + uploadedFile)
          });
+         count1++
       })
       images.push({id:`${count1}`,image:uploadedFile})
       console.log(pieceX,pieceY)
@@ -125,6 +125,7 @@ app.get("/getImage", function (req, res) {
     setTimeout(()=>{
       fs.readdir(outputDir, (err, files) => {
         files.forEach(file => {
+          console.log(count)
           var bitmap = fs.readFileSync(outputDir+file);
           resImages.push({id:`${count}`,url:bitmap.toString("base64")})
           count++
