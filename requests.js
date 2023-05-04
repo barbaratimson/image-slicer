@@ -8,7 +8,6 @@ Clipper.configure('canvas', Canvas);
 // The fileUpload npm package for handling
 // file upload functionality
 const fileUpload = require("express-fileupload");
-const { clear } = require("console");
 const images = []
 // Creating app
 const app = express();
@@ -109,34 +108,59 @@ app.get("/", function (req, res) {
  res.send(files)
 });
 })
-
 app.get("/getImage", function (req, res) {
   let image = req.query.image
   let cols = req.query.cols
   let rows = req.query.rows
-    clearDir()
-  setTimeout(()=>{
-    let resImages = []
-    let count = 0
+  clearDir()
+  setTimeout(() => {
     const inputDir = __dirname + "/uploads/"
     const outputDir = __dirname + "/output/"
     console.log(image)
-    cutImageUp(inputDir + image,cols,rows)
-    setTimeout(()=>{
-      fs.readdir(outputDir, (err, files) => {
-        files.forEach(file => {
-          console.log(count)
-          var bitmap = fs.readFileSync(outputDir+file);
-          resImages.push({id:`${count}`,url:bitmap.toString("base64")})
-          count++
-        })
-        console.log(resImages)
-      res.send(resImages)
-    },100)
-     
-  })
-    },200)
+    cutImageUp(inputDir + image, cols, rows)
+    setTimeout(() => {
+      fs.readdir(outputDir, async (err, files) => {
+        let resImages = [];
+        for (const file of files) {
+          const bitmap = await fs.promises.readFile(outputDir + file);
+          resImages.push({ url: bitmap.toString("base64") });
+          console.log(`Read ${file}`);
+        }
+        res.send(resImages);
+        console.log(resImages.length);
+      });
+    }, 100);
+  }, 200);
 });
+// app.get("/getImage", function (req, res) {
+//   let image = req.query.image
+//   let cols = req.query.cols
+//   let rows = req.query.rows
+//     clearDir()
+//   setTimeout(()=>{
+//     let resImages = []
+//     const inputDir = __dirname + "/uploads/"
+//     const outputDir = __dirname + "/output/"
+//     console.log(image)
+//     cutImageUp(inputDir + image,cols,rows)
+//     setTimeout(()=>{
+//       fs.readdir(outputDir, (err, files) => {
+//         if (err){
+//           console.log(err)
+//         }
+//         files.forEach(file => {
+//           var bitmap = fs.readFileSync(outputDir+file);
+//           resImages.push({url:bitmap.toString("base64")})
+//           console.log(`Read ${file}`)
+//         })
+//         // console.log(resImages)
+//       res.send(resImages)
+//       console.log(resImages.length)
+//     },100)
+     
+//   })
+//     },200)
+// });
 
 app.listen(5050, () => console.log(`Start!`))
 
