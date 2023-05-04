@@ -10,7 +10,6 @@ const images = []
 const app = express();
 app.use(fileUpload());
 app.use(cors())
-
 const clearDir = () => {
 fs.readdir("./output/", (err,files) => {
   if (err){
@@ -91,6 +90,7 @@ app.get("/", function (req, res) {
 });
 })
 app.get("/getImage", function (req, res) {
+  console.log("sdsds")
   let image = req.query.image
   let cols = req.query.cols
   let rows = req.query.rows
@@ -112,6 +112,7 @@ app.get("/getImage", function (req, res) {
         }
         res.send(resImages);
         console.log(`${count} files sent`)
+        console.log(req.method, req.path,image, cols, rows)
       });
     }, 100);
   }, 200);
