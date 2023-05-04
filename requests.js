@@ -5,13 +5,9 @@ var Clipper = require('image-clipper');
 var sizeOf = require('image-size');
 var Canvas = require('canvas');
 Clipper.configure('canvas', Canvas);
-// The fileUpload npm package for handling
-// file upload functionality
 const fileUpload = require("express-fileupload");
 const images = []
-// Creating app
 const app = express();
-// Passing fileUpload as a middleware 
 app.use(fileUpload());
 app.use(cors())
 
@@ -53,7 +49,6 @@ fs.readdir("./output/", (err,files) => {
         Clipper(image, function() {
           this.crop(pieceX,pieceY,pieceWidth,pieceHeight)
           .resize(200,200)
-          // this.crop(pieceX,pieceY,pieceWidth,pieceHeight)
           .quality(100)
           .toFile(image1, function() {
             console.log(`Saved to /output/` + uploadedFile)
@@ -70,19 +65,6 @@ fs.readdir("./output/", (err,files) => {
   
         }
 
-
-// For handling the upload request
-// app.post("/upload", function (req, res) {
-//   let file = req.query.file
-//   clearDir()
-//   setTimeout(()=>{
-//   cutImageUp(__dirname + "/uploads/" + file,3,3)
-//   res.send(images)
-// },1000)
-// });
-
-  
-// To handle the download file request
 app.get("/download", function (req, res) {
   let resImages = []
   let count = 0
@@ -112,6 +94,7 @@ app.get("/getImage", function (req, res) {
   let image = req.query.image
   let cols = req.query.cols
   let rows = req.query.rows
+  let count = 0
   clearDir()
   setTimeout(() => {
     const inputDir = __dirname + "/uploads/"
@@ -123,44 +106,16 @@ app.get("/getImage", function (req, res) {
         let resImages = [];
         for (const file of files) {
           const bitmap = await fs.promises.readFile(outputDir + file);
-          resImages.push({ url: bitmap.toString("base64") });
+          resImages.push({id:`${count}`,url: bitmap.toString("base64") });
           console.log(`Read ${file}`);
+          count++
         }
         res.send(resImages);
-        console.log(resImages.length);
+        console.log(`${count} files sent`)
       });
     }, 100);
   }, 200);
 });
-// app.get("/getImage", function (req, res) {
-//   let image = req.query.image
-//   let cols = req.query.cols
-//   let rows = req.query.rows
-//     clearDir()
-//   setTimeout(()=>{
-//     let resImages = []
-//     const inputDir = __dirname + "/uploads/"
-//     const outputDir = __dirname + "/output/"
-//     console.log(image)
-//     cutImageUp(inputDir + image,cols,rows)
-//     setTimeout(()=>{
-//       fs.readdir(outputDir, (err, files) => {
-//         if (err){
-//           console.log(err)
-//         }
-//         files.forEach(file => {
-//           var bitmap = fs.readFileSync(outputDir+file);
-//           resImages.push({url:bitmap.toString("base64")})
-//           console.log(`Read ${file}`)
-//         })
-//         // console.log(resImages)
-//       res.send(resImages)
-//       console.log(resImages.length)
-//     },100)
-     
-//   })
-//     },200)
-// });
 
 app.listen(5050, () => console.log(`Start!`))
 
