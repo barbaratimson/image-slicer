@@ -8,32 +8,37 @@ Clipper.configure('canvas', Canvas);
 // The fileUpload npm package for handling
 // file upload functionality
 const fileUpload = require("express-fileupload");
+const { clear } = require("console");
 const images = []
 // Creating app
 const app = express();
 // Passing fileUpload as a middleware 
 app.use(fileUpload());
 app.use(cors())
-app.use(function (error, req, res, next) {
-  console.log("fsdfsdfds",req.path,req.method,req.ip)
-   next();
-});
-function download(base64, fileName) {
-  console.log(base64)
-  var link = document.createElement("a");
 
-  document.body.appendChild(link); // for Firefox
-
-  link.setAttribute("href", base64);
-  link.setAttribute("download", fileName);
-  link.click();
+const clearDir = () => {
+fs.readdir("./output/", (err,files) => {
+  if (err){
+    console.log(err)
+  }else {
+  if (files){
+  files.forEach(file1 => {
+    fs.rm("./output/"+file1,(err) => {
+      if (err){
+        console.log(err)
+      }
+      console.log(`File ${"./output/"+file1} removed`)
+    })
+  })
 }
-
+}
+});
+}
   function cutImageUp(image,cols,rows) {
     console.log(image)
     let numColsToCut = cols
     let numRowsToCut = rows
-    let count = 0
+    let count1 = 0
     const dimensions = sizeOf(image)
     let pieceX = 0
     let pieceY = 0
@@ -44,18 +49,19 @@ function download(base64, fileName) {
     console.log(imageHeight,imageWidth)
     for(var x = 0; x < numColsToCut; ++x) {
         for(var y = 0; y < numRowsToCut; ++y) {
-        count++
-        let uploadedFile = `image_${count}.png`
+        count1++
+        let uploadedFile = `image_${count1}.png`
         let image1 = __dirname + "/output/" + uploadedFile;
         Clipper(image, function() {
           this.crop(pieceX,pieceY,pieceWidth,pieceHeight)
+          .resize(200,200)
           // this.crop(pieceX,pieceY,pieceWidth,pieceHeight)
           .quality(100)
           .toFile(image1, function() {
-            console.log(`Saved to /output/image_${count}.png`)
+            console.log(`Saved to /output/` + uploadedFile)
          });
       })
-      images.push({id:`${count}`,image:`image_${count}.png`})
+      images.push({id:`${count1}`,image:uploadedFile})
       console.log(pieceX,pieceY)
       pieceY = pieceY + pieceHeight
     }
@@ -67,65 +73,70 @@ function download(base64, fileName) {
 
 
 // For handling the upload request
-app.post("/upload", function (req, res) {
-
-  // When a file has been uploaded
-  if (req.files && Object.keys(req.files).length !== 0) {
-    
-    // Uploaded path
-    const uploadedFile = req.files.uploadFile;
-  
-    // Logging uploading file
-    console.log(uploadedFile);
-  
-    // Upload path
-    const uploadPath = __dirname
-        + "/uploads/" + uploadedFile.name;
-    // To save the file using mv() function
-    console.log(`./uploads/${uploadedFile.name}`)
-    uploadedFile.mv(uploadPath, function (err) {
-      if (err) {
-        console.log(err);
-        res.send("Failed !!");
-      } else {
-      cutImageUp(uploadPath,3,3)};
-      res.send(images)
-    });
-  } else res.send("No file uploaded !!");
-
-});
+// app.post("/upload", function (req, res) {
+//   let file = req.query.file
+//   clearDir()
+//   setTimeout(()=>{
+//   cutImageUp(__dirname + "/uploads/" + file,3,3)
+//   res.send(images)
+// },1000)
+// });
 
   
 // To handle the download file request
 app.get("/download", function (req, res) {
-  let image = req.query.image
   let resImages = []
   let count = 0
-  // res.header('image',"data:image/png;base64,"+bitmap.toString("base64"))
-  
   fs.readdir("./output/", (err, files) => {
     files.forEach(file => {
       var bitmap = fs.readFileSync("./output/"+file);
-      // resImages.push({id:`${count}`,url:"data:image/png;base64,"+bitmap.toString("base64")})
       resImages.push({id:`${count}`,url:bitmap.toString("base64")})
       count++
     })
     console.log(resImages)
     res.send(resImages)
   })
-  // // The res.download() talking file path to be downloaded
-  // console.log(__dirname + "/output/" + "image_1.png")
-  // res.download(__dirname + "/output/" + "image_1.png", function (err) {
-  //   if (err) {
-  //     console.log(err);
-  //   }
-  // });
 });
   
 app.get("/", function (req, res) {
- res.send("fsdfdsfsd")
+  let files = []
+  let count = 0
+  fs.readdir("./uploads/", (err, file) => {
+    file.forEach(file => {
+      files.push({id:count,file:file})
+      count++
+    })
+ res.send(files)
 });
-// Makes app listen to port 3000
+})
+
+app.get("/getImage", function (req, res) {
+  let image = req.query.image
+  let cols = req.query.cols
+  let rows = req.query.rows
+    clearDir()
+  setTimeout(()=>{
+    let resImages = []
+    let count = 0
+    const inputDir = __dirname + "/uploads/"
+    const outputDir = __dirname + "/output/"
+    console.log(image)
+    cutImageUp(inputDir + image,cols,rows)
+    setTimeout(()=>{
+      fs.readdir(outputDir, (err, files) => {
+        files.forEach(file => {
+          var bitmap = fs.readFileSync(outputDir+file);
+          resImages.push({id:`${count}`,url:bitmap.toString("base64")})
+          count++
+        })
+        console.log(resImages)
+      res.send(resImages)
+    },100)
+     
+  })
+    },200)
+});
+
 app.listen(5050, () => console.log(`Start!`))
 
 
