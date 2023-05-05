@@ -118,7 +118,7 @@ app.get("/getImage", function (req, res) {
   }, 200);
 });
 
-app.listen(5050, () => console.log(`Start!`))
+app.listen(5050, () => console.log(`Server started on port 5050`))
 
 
 
